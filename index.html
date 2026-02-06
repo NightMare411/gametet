@@ -11,7 +11,7 @@
             --max-width: 500px;
             --item-size: 55px;
             --player-width: 75px; 
-            --player-height: 95px;
+            --player-height: 60px;
         }
 
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
@@ -20,7 +20,7 @@
             background: #1a1a1a;
             font-family: 'Segoe UI', Arial, sans-serif;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
+            height: 90vh; overflow: hidden;
         }
 
         /* --- BACKGROUND MENU (Repo gametet) --- */
@@ -67,7 +67,7 @@
 
         /* --- PLAYER (Repo tet2026) --- */
         #player {
-            position: absolute; bottom: 90px;
+            position: absolute; bottom: 30px;
             width: var(--player-width); height: var(--player-height);
             background: url("https://raw.githubusercontent.com/NightMare411/tet2026/main/player.png") center/contain no-repeat;
             transition: left 0.08s ease-out;
@@ -83,7 +83,7 @@
 
         .item-good { border: 2px solid #00ff00; box-shadow: 0 0 10px #00ff00; }
         .item-bad { border: 2px solid #ff4500; box-shadow: 0 0 10px #ff4500; }
-        .item-fatal { border: 3px solid #8a2be2; box-shadow: 0 0 15px #8a2be2; }
+        .item-fatal { border: 2px solid #8a2be2; box-shadow: 0 0 15px #8a2be2; }
 
         #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 50; }
         #score-display {
