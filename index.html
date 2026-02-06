@@ -2,206 +2,184 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Game Hứng Lì Xì 2026</title>
+    <title>Game Hứng Lì Xì 2026 - Music Update</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root {
             --game-width: 100vw;
             --game-height: 100vh;
             --max-width: 500px;
+            --item-size: 55px;
+            --player-width: 75px; 
+            --player-height: 65px;
         }
 
-        * { box-sizing: border-box; touch-action: none; }
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
 
         body {
-            margin: 0;
-            background: #222;
+            background: #1a1a1a;
             font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
         }
 
-        /* Menu & Overlay */
-        #menu, #gameover {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 20px;
+        /* --- BACKGROUND MENU (Repo gametet) --- */
+        #menu {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url("https://raw.githubusercontent.com/NightMare411/gametet/main/nenmenu.jpeg") center/cover no-repeat;
+            color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 100; text-align: center; padding: 20px;
         }
 
-        #menu h1 { font-size: 32px; color: #ffd700; margin-bottom: 10px; }
-
-        button {
-            background: linear-gradient(135deg, #ff4d4d, #b30000);
-            color: white;
-            border: none;
-            padding: 12px 40px;
-            font-size: 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 10px;
-            box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
-        }
-
-        /* Game Container */
+        /* --- BACKGROUND GAME (Repo gametet) --- */
         #game-wrapper {
-            width: var(--game-width);
+            width: var(--game-width); 
             max-width: var(--max-width);
-            height: var(--game-height);
+            height: var(--game-height); 
             position: relative;
-            background: url("https://NightMare411.github.io/tet2026/bggame.webp") center/cover no-repeat;
-            background-color: #fff;
-            overflow: hidden;
+            background: url("https://raw.githubusercontent.com/NightMare411/gametet/main/hinhnen.jpg") center/cover no-repeat;
+            background-color: #fff; overflow: hidden;
+            box-shadow: 0 0 100px rgba(0,0,0,0.5);
+        }
+
+        #gameover {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.92);
+            color: white; display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 110; text-align: center; padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        #result-img {
+            width: 80%; max-width: 250px;
+            height: auto; max-height: 30vh;
+            object-fit: contain; margin-bottom: 20px;
+            border-radius: 15px;
         }
 
         .lane-line {
-            position: absolute;
-            top: 0; bottom: 0;
-            width: 1px;
-            background: rgba(255,255,255,0.2);
-            border-left: 1px dashed rgba(0,0,0,0.1);
+            position: absolute; top: 0; bottom: 0; width: 1px;
+            background: rgba(255,255,255,0.1); border-left: 1px dashed rgba(255,215,0,0.3);
         }
 
+        /* --- PLAYER (Repo tet2026) --- */
         #player {
-            position: absolute;
-            bottom: 40px;
-            width: 80px;
-            height: 60px;
-            background: url("https://NightMare411.github.io/tet2026/player.png") center/contain no-repeat;
-            transition: left 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            position: absolute; bottom: 50px;
+            width: var(--player-width); height: var(--player-height);
+            background: url("https://raw.githubusercontent.com/NightMare411/tet2026/main/player.png") center/contain no-repeat;
+            transition: left 0.08s ease-out;
             z-index: 10;
         }
 
         .item {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            will-change: transform;
+            position: absolute; width: var(--item-size); height: var(--item-size);
+            background-size: contain; background-repeat: no-repeat;
+            background-position: center; will-change: transform;
+            top: 0; border-radius: 20px;
         }
 
-        #ui-layer {
-            position: absolute;
-            top: env(safe-area-inset-top, 20px);
-            left: 20px;
-            z-index: 50;
-            pointer-events: none;
-        }
+        .item-good { border: 2px solid #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .item-bad { border: 2px solid #ff4500; box-shadow: 0 0 10px #ff4500; }
+        .item-fatal { border: 3px solid #8a2be2; box-shadow: 0 0 15px #8a2be2; }
 
+        #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 50; }
         #score-display {
-            font-size: 22px;
-            font-weight: bold;
-            color: #b30000;
-            background: rgba(255,255,255,0.8);
-            padding: 5px 15px;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 1.1em; font-weight: bold; color: #b30000;
+            background: rgba(255,255,255,0.9); padding: 10px 20px;
+            border-radius: 50px; border: 2px solid #ffd700;
         }
 
-        #musicBtn {
-            position: absolute;
-            top: env(safe-area-inset-top, 20px);
-            right: 20px;
-            z-index: 50;
-            background: rgba(255,215,0,0.8);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 50%;
-            cursor: pointer;
+        button {
+            background: linear-gradient(180deg, #ffd700, #ff8c00);
+            color: #b30000; border: none; padding: 15px 40px;
+            font-size: 1.2rem; border-radius: 50px; cursor: pointer;
+            font-weight: bold; margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
+<audio id="bgMusic" loop>
+    <source src="https://raw.githubusercontent.com/NightMare411/gametet/main/nhacnen.mp3" type="audio/mpeg">
+</audio>
+<audio id="loseSound">
+    <source src="https://raw.githubusercontent.com/NightMare411/gametet/main/nhacthua.mp3" type="audio/mpeg">
+</audio>
+<audio id="winSound">
+    <source src="https://raw.githubusercontent.com/NightMare411/tet2026/main/langman.mp3" type="audio/mpeg">
+</audio>
+
+
 <div id="menu">
-    <h1>🧧 HỨNG LÌ XÌ 2026</h1>
-    <p>Mục tiêu: 10.000.000 đồng</p>
-    <button onclick="startGame()">BẮT ĐẦU</button>
-    <div style="margin-top:20px; font-size:14px; opacity:0.8;">
-        Chạm hai bên màn hình hoặc dùng phím ⬅️ ➡️
-    </div>
+    <h1 style="color:#ffd700; font-size: 2.5rem; text-shadow: 2px 2px 5px #000;">🧧 HỨNG LÌ XÌ 2026</h1>
+    <p style="margin: 10px 0;">Càng nhiều tiền rơi càng nhanh!</p>
+    <button onclick="startGame()">VÀO CHƠI</button>
 </div>
 
 <div id="game-wrapper" style="display:none;">
     <div class="lane-line" style="left: 33.33%;"></div>
     <div class="lane-line" style="left: 66.66%;"></div>
-    
-    <div id="ui-layer">
-        <div id="score-display">Tiền: 0đ</div>
-    </div>
-    
-    <button id="musicBtn" onclick="toggleMusic()">🔊</button>
+    <div id="ui-layer"><div id="score-display">Tiền: 0đ</div></div>
     <div id="player"></div>
 
-    <div id="gameover" style="display:none;">
-        <h2 id="overTitle">GAME OVER</h2>
-        <p id="finalScore"></p>
+    <div id="gameover">
+        <img id="result-img" src="" alt="Kết quả">
+        <h2 id="overTitle" style="font-size: 2rem;"></h2>
+        <p id="finalScore" style="margin: 15px 0; white-space: pre-line;"></p>
         <button onclick="location.reload()">CHƠI LẠI</button>
     </div>
 </div>
 
-<audio id="bgm" loop src="https://NightMare411.github.io/tet2026/nhactet.mp3"></audio>
-<audio id="winSound" src="https://NightMare411.github.io/tet2026/langman.mp3"></audio>
-
 <script>
+    const REPO_ITEMS = "https://raw.githubusercontent.com/NightMare411/tet2026/main/";
+    const REPO_ASSETS = "https://raw.githubusercontent.com/NightMare411/gametet/main/";
+
     const CONFIG = {
         WIN_SCORE: 10000000,
-        LANES: [0.166, 0.5, 0.833], // Tỉ lệ % để căn giữa 3 làn
+        MAX_SPEED_SCORE: 5000000,
+        LANES: [0.166, 0.5, 0.833],
+        IMG_WIN: REPO_ASSETS + "thang.jpg",
+        IMG_LOSE: REPO_ASSETS + "thua.jpg",
         ITEMS: [
-            { type: 'good', value: 50000, img: 'lixi.png', weight: 0.3 },
-            { type: 'namlopk', value: 500000, img: 'lixi500k.webp', weight: 0.1 },
-            { type: 'haixik', value: 200000, img: '200k.jpeg', weight: 0.1 },
-            { type: 'haik', value: 2000, img: 'lixi2k.webp', weight: 0.1 },
-            { type: 'lixilai', value: -200000, img: 'doilixi.webp', weight: 0.15 },
-            { type: 'bad', value: -300000, img: 'mattien.jpeg', weight: 0.15 },
-            { type: 'homework', value: NaN, img: 'baitap.webp', weight: 0.1 }
+            { value: 50000, img: 'lixi.png', weight: 0.35 },
+            { value: 500000, img: 'lixi500k.webp', weight: 0.1 },
+            { value: 200000, img: '200k.jpeg', weight: 0.1 },
+            { value: 2000, img: 'lixi2k.webp', weight: 0.05 },
+            { value: -200000, img: 'doilixi.webp', weight: 0.15 },
+            { value: -300000, img: 'mattien.jpeg', weight: 0.15 },
+            { value: NaN, img: 'baitap.webp', weight: 0.1 }
         ]
     };
 
-    let state = {
-        score: 0,
-        lane: 1,
-        alive: false,
-        speed: 5,
-        startTime: 0
-    };
-
+    let state = { score: 0, lane: 1, alive: false, fallTime: 5.0 };
     const player = document.getElementById('player');
     const wrapper = document.getElementById('game-wrapper');
     const scoreText = document.getElementById('score-display');
-    const bgm = document.getElementById('bgm');
+    const bgMusic = document.getElementById('bgMusic');
+    const loseSound = document.getElementById('loseSound');
+    const winSound = document.getElementById('winSound');
 
     function updatePlayerPos() {
         const w = wrapper.offsetWidth;
-        player.style.left = (CONFIG.LANES[state.lane] * w - 40) + 'px';
+        player.style.left = (CONFIG.LANES[state.lane] * w - player.offsetWidth / 2) + 'px';
     }
 
-    // Điều khiển
-    document.addEventListener('keydown', e => {
+    wrapper.addEventListener('pointerdown', e => {
         if (!state.alive) return;
-        if (e.key === 'ArrowLeft') state.lane = Math.max(0, state.lane - 1);
-        if (e.key === 'ArrowRight') state.lane = Math.min(2, state.lane - 1 + 2);
+        const rect = wrapper.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        if (clickX < wrapper.offsetWidth / 2) state.lane = Math.max(0, state.lane - 1);
+        else state.lane = Math.min(2, state.lane + 1);
         updatePlayerPos();
     });
 
-    wrapper.addEventListener('touchstart', e => {
+    document.addEventListener('keydown', e => {
         if (!state.alive) return;
-        const x = e.touches[0].clientX;
-        if (x < window.innerWidth / 2) state.lane = Math.max(0, state.lane - 1);
-        else state.lane = Math.min(2, state.lane + 1);
+        if (e.key === 'ArrowLeft') state.lane = Math.max(0, state.lane - 1);
+        if (e.key === 'ArrowRight') state.lane = Math.min(2, state.lane + 1);
         updatePlayerPos();
     });
 
@@ -209,103 +187,91 @@
         document.getElementById('menu').style.display = 'none';
         wrapper.style.display = 'block';
         state.alive = true;
-        state.startTime = Date.now();
+        bgMusic.volume = 0.5;
+        bgMusic.play().catch(() => {});
         updatePlayerPos();
-        bgm.volume = 0.5;
-        bgm.play().catch(() => {});
-        gameLoop();
         spawnLogic();
     }
 
     function spawnLogic() {
         if (!state.alive) return;
-        
-        // Tăng độ khó
-        const elapsed = (Date.now() - state.startTime) / 1000;
-        state.speed = Math.max(1.8, 5 - (elapsed / 60));
-        
-        createItem();
-        setTimeout(spawnLogic, Math.max(400, 800 - (elapsed * 5)));
+        let ratio = Math.min(Math.max(state.score, 0) / CONFIG.MAX_SPEED_SCORE, 1);
+        state.fallTime = 5.0 - (ratio * 3.5);
+        createItem(state.fallTime);
+        let spawnDelay = 850 - (ratio * 550);
+        setTimeout(spawnLogic, spawnDelay);
     }
 
-    function createItem() {
+    function createItem(currentFallTime) {
         const rand = Math.random();
         let cumulativeWeight = 0;
         let itemCfg = CONFIG.ITEMS[0];
-
         for (const item of CONFIG.ITEMS) {
             cumulativeWeight += item.weight;
-            if (rand < cumulativeWeight) {
-                itemCfg = item;
-                break;
-            }
+            if (rand < cumulativeWeight) { itemCfg = item; break; }
         }
 
         const el = document.createElement('div');
-        el.className = 'item';
+        const typeClass = isNaN(itemCfg.value) ? 'item-fatal' : (itemCfg.value < 0 ? 'item-bad' : 'item-good');
+        el.className = `item ${typeClass}`;
+        
         const laneIdx = Math.floor(Math.random() * 3);
         const w = wrapper.offsetWidth;
+        const h = wrapper.offsetHeight;
         
-        el.style.backgroundImage = `url("https://NightMare411.github.io/tet2026/${itemCfg.img}")`;
-        el.style.left = (CONFIG.LANES[laneIdx] * w - 35) + 'px';
-        el.style.top = '-100px';
+        el.style.backgroundImage = `url("${REPO_ITEMS + itemCfg.img}")`;
+        el.style.left = (CONFIG.LANES[laneIdx] * w - 27.5) + 'px'; 
         wrapper.appendChild(el);
 
-        let top = -100;
+        let currentY = -100; 
         const animate = () => {
             if (!state.alive) { el.remove(); return; }
-            top += (wrapper.offsetHeight / (state.speed * 60));
-            el.style.top = top + 'px';
+            currentY += h / (currentFallTime * 60);
+            el.style.transform = `translateY(${currentY}px)`;
+            const playerTop = h - 115;
+            const itemBottom = currentY + 55;
 
-            // Check va chạm
-            if (top > wrapper.offsetHeight - 110 && top < wrapper.offsetHeight - 40) {
-                if (laneIdx === state.lane) {
-                    handleCollect(itemCfg);
-                    el.remove();
-                    return;
-                }
-            }
-
-            if (top < wrapper.offsetHeight) {
-                requestAnimationFrame(animate);
-            } else {
+            if (laneIdx === state.lane && itemBottom > playerTop + 20 && currentY < h - 45) {
+                handleCollect(itemCfg);
                 el.remove();
+                return;
             }
+            if (currentY < h + 100) requestAnimationFrame(animate);
+            else el.remove();
         };
         requestAnimationFrame(animate);
     }
 
     function handleCollect(cfg) {
         if (isNaN(cfg.value)) {
-            endGame("📘 DÍNH BÀI TẬP TẾT!", "Tết này xong đời rồi...");
+            endGame("LOSE", "DÍNH BÀI TẬP RỒI!\nPhải chăm học thôi...");
             return;
         }
-
         state.score += cfg.value;
         scoreText.innerText = `Tiền: ${state.score.toLocaleString()}đ`;
-
-        if (state.score >= CONFIG.WIN_SCORE) {
-            endGame("🏆 CHIẾN THẮNG!", "Bạn là triệu phú lì xì!");
-        } else if (state.score < 0) {
-            endGame("💀 TRẮNG TAY!", "Bạn đã nợ lì xì rồi...");
-        }
+        if (state.score >= CONFIG.WIN_SCORE) endGame("WIN", "CHIẾN THẮNG!");
+        else if (state.score < 0) endGame("LOSE", "PHÁ SẢN RỒI!");
     }
 
-    function endGame(title, msg) {
+    function endGame(type, msg) {
         state.alive = false;
-        bgm.pause();
+        bgMusic.pause();
+        
+        // CHÈN NHẠC THẮNG / THUA
+        if (type === "WIN") {
+            winSound.play();
+        } else {
+            loseSound.play();
+        }
+
         const over = document.getElementById('gameover');
-        document.getElementById('overTitle').innerText = title;
-        document.getElementById('finalScore').innerText = `${msg} \n Tổng cộng: ${state.score.toLocaleString()}đ`;
         over.style.display = 'flex';
-        if(title.includes("THẮNG")) document.getElementById('winSound').play();
+        document.getElementById('result-img').src = (type === "WIN" ? CONFIG.IMG_WIN : CONFIG.IMG_LOSE);
+        document.getElementById('overTitle').innerText = (type === "WIN" ? "CHIẾN THẮNG!" : "THẤT BẠI!");
+        document.getElementById('finalScore').innerText = `${msg}\nTổng lộc: ${state.score.toLocaleString()}đ`;
     }
 
-    function toggleMusic() {
-        const btn = document.getElementById('musicBtn');
-        if (bgm.paused) { bgm.play(); btn.innerText = "🔊"; }
-        else { bgm.pause(); btn.innerText = "🔇"; }
-    }
+    window.addEventListener('resize', updatePlayerPos);
 </script>
 </body>
 </html>
