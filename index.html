@@ -1,6 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Hứng Lì Xì 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        :root {
+            --game-width: 100vw;
+            --game-height: 100vh;
+            --max-width: 500px;
+        }
+
+        * { box-sizing: border-box; touch-action: none; }
+
+        body {
+            margin: 0;
+            background: #222;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Menu & Overlay */
+        #menu, #gameover {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #menu h1 { font-size: 32px; color: #ffd700; margin-bottom: 10px; }
+
+        button {
+            background: linear-gradient(135deg, #ff4d4d, #b30000);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+        }
+
+        /* Game Container */
+        #game-wrapper {
+            width: var(--game-width);
+            max-width: var(--max-width);
+            height: var(--game-height);
+            position: relative;
+            background: url("https://NightMare411.github.io/tet2026/bggame.webp") center/cover no-repeat;
+            background-color: #fff;
+            overflow: hidden;
+        }
+
+        .lane-line {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.2);
+            border-left: 1px dashed rgba(0,0,0,0.1);
+        }
+
+        #player {
+            position: absolute;
+            bottom: 40px;
+            width: 80px;
+            height: 60px;
+            background: url("https://NightMare411.github.io/tet2026/player.png") center/contain no-repeat;
+            transition: left 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 10;
+        }
+
+        .item {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            will-change: transform;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: env(safe-area-inset-top, 20px);
+            left: 20px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        #score-display {
+            font-size: 22px;
+            font-weight: bold;
+            color: #b30000;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #musicBtn {
+            position: absolute;
+            top: env(safe-area-inset-top, 20px);
+            right: 20px;
+            z-index: 50;
+            background: rgba(255,215,0,0.8);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="menu">
+    <h1>🧧 HỨNG LÌ XÌ 2026</h1>
+    <p>Mục tiêu: 10.000.000 đồng</p>
+    <button onclick="startGame()">BẮT ĐẦU</button>
+    <div style="margin-top:20px; font-size:14px; opacity:0.8;">
+        Chạm hai bên màn hình hoặc dùng phím ⬅️ ➡️
+    </div>
+</div>
+
+<div id="game-wrapper" style="display:none;">
+    <div class="lane-line" style="left: 33.33%;"></div>
+    <div class="lane-line" style="left: 66.66%;"></div>
+    
+    <div id="ui-layer">
+        <div id="score-display">Tiền: 0đ</div>
+    </div>
+    
+    <button id="musicBtn" onclick="toggleMusic()">🔊</button>
+    <div id="player"></div>
+
+    <div id="gameover" style="display:none;">
+        <h2 id="overTitle">GAME OVER</h2>
+        <p id="finalScore"></p>
+        <button onclick="location.reload()">CHƠI LẠI</button>
+    </div>
+</div>
+
+<audio id="bgm" loop src="https://NightMare411.github.io/tet2026/nhactet.mp3"></audio>
+<audio id="winSound" src="https://NightMare411.github.io/tet2026/langman.mp3"></audio>
+
 <script>
-function goToGame(){
-    // Chuyển hướng sang trang game (Repository gametet bạn đã tạo)
-    window.location.href = "https://nightmare411.github.io/gametet/";
-}
+    const CONFIG = {
+        WIN_SCORE: 10000000,
+        LANES: [0.166, 0.5, 0.833], // Tỉ lệ % để căn giữa 3 làn
+        ITEMS: [
+            { type: 'good', value: 50000, img: 'lixi.png', weight: 0.3 },
+            { type: 'namlopk', value: 500000, img: 'lixi500k.webp', weight: 0.1 },
+            { type: 'haixik', value: 200000, img: '200k.jpeg', weight: 0.1 },
+            { type: 'haik', value: 2000, img: 'lixi2k.webp', weight: 0.1 },
+            { type: 'lixilai', value: -200000, img: 'doilixi.webp', weight: 0.15 },
+            { type: 'bad', value: -300000, img: 'mattien.jpeg', weight: 0.15 },
+            { type: 'homework', value: NaN, img: 'baitap.webp', weight: 0.1 }
+        ]
+    };
+
+    let state = {
+        score: 0,
+        lane: 1,
+        alive: false,
+        speed: 5,
+        startTime: 0
+    };
+
+    const player = document.getElementById('player');
+    const wrapper = document.getElementById('game-wrapper');
+    const scoreText = document.getElementById('score-display');
+    const bgm = document.getElementById('bgm');
+
+    function updatePlayerPos() {
+        const w = wrapper.offsetWidth;
+        player.style.left = (CONFIG.LANES[state.lane] * w - 40) + 'px';
+    }
+
+    // Điều khiển
+    document.addEventListener('keydown', e => {
+        if (!state.alive) return;
+        if (e.key === 'ArrowLeft') state.lane = Math.max(0, state.lane - 1);
+        if (e.key === 'ArrowRight') state.lane = Math.min(2, state.lane - 1 + 2);
+        updatePlayerPos();
+    });
+
+    wrapper.addEventListener('touchstart', e => {
+        if (!state.alive) return;
+        const x = e.touches[0].clientX;
+        if (x < window.innerWidth / 2) state.lane = Math.max(0, state.lane - 1);
+        else state.lane = Math.min(2, state.lane + 1);
+        updatePlayerPos();
+    });
+
+    function startGame() {
+        document.getElementById('menu').style.display = 'none';
+        wrapper.style.display = 'block';
+        state.alive = true;
+        state.startTime = Date.now();
+        updatePlayerPos();
+        bgm.volume = 0.5;
+        bgm.play().catch(() => {});
+        gameLoop();
+        spawnLogic();
+    }
+
+    function spawnLogic() {
+        if (!state.alive) return;
+        
+        // Tăng độ khó
+        const elapsed = (Date.now() - state.startTime) / 1000;
+        state.speed = Math.max(1.8, 5 - (elapsed / 60));
+        
+        createItem();
+        setTimeout(spawnLogic, Math.max(400, 800 - (elapsed * 5)));
+    }
+
+    function createItem() {
+        const rand = Math.random();
+        let cumulativeWeight = 0;
+        let itemCfg = CONFIG.ITEMS[0];
+
+        for (const item of CONFIG.ITEMS) {
+            cumulativeWeight += item.weight;
+            if (rand < cumulativeWeight) {
+                itemCfg = item;
+                break;
+            }
+        }
+
+        const el = document.createElement('div');
+        el.className = 'item';
+        const laneIdx = Math.floor(Math.random() * 3);
+        const w = wrapper.offsetWidth;
+        
+        el.style.backgroundImage = `url("https://NightMare411.github.io/tet2026/${itemCfg.img}")`;
+        el.style.left = (CONFIG.LANES[laneIdx] * w - 35) + 'px';
+        el.style.top = '-100px';
+        wrapper.appendChild(el);
+
+        let top = -100;
+        const animate = () => {
+            if (!state.alive) { el.remove(); return; }
+            top += (wrapper.offsetHeight / (state.speed * 60));
+            el.style.top = top + 'px';
+
+            // Check va chạm
+            if (top > wrapper.offsetHeight - 110 && top < wrapper.offsetHeight - 40) {
+                if (laneIdx === state.lane) {
+                    handleCollect(itemCfg);
+                    el.remove();
+                    return;
+                }
+            }
+
+            if (top < wrapper.offsetHeight) {
+                requestAnimationFrame(animate);
+            } else {
+                el.remove();
+            }
+        };
+        requestAnimationFrame(animate);
+    }
+
+    function handleCollect(cfg) {
+        if (isNaN(cfg.value)) {
+            endGame("📘 DÍNH BÀI TẬP TẾT!", "Tết này xong đời rồi...");
+            return;
+        }
+
+        state.score += cfg.value;
+        scoreText.innerText = `Tiền: ${state.score.toLocaleString()}đ`;
+
+        if (state.score >= CONFIG.WIN_SCORE) {
+            endGame("🏆 CHIẾN THẮNG!", "Bạn là triệu phú lì xì!");
+        } else if (state.score < 0) {
+            endGame("💀 TRẮNG TAY!", "Bạn đã nợ lì xì rồi...");
+        }
+    }
+
+    function endGame(title, msg) {
+        state.alive = false;
+        bgm.pause();
+        const over = document.getElementById('gameover');
+        document.getElementById('overTitle').innerText = title;
+        document.getElementById('finalScore').innerText = `${msg} \n Tổng cộng: ${state.score.toLocaleString()}đ`;
+        over.style.display = 'flex';
+        if(title.includes("THẮNG")) document.getElementById('winSound').play();
+    }
+
+    function toggleMusic() {
+        const btn = document.getElementById('musicBtn');
+        if (bgm.paused) { bgm.play(); btn.innerText = "🔊"; }
+        else { bgm.pause(); btn.innerText = "🔇"; }
+    }
 </script>
+</body>
+</html>
